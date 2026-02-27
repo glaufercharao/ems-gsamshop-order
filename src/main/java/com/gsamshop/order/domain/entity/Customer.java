@@ -1,8 +1,6 @@
 package com.gsamshop.order.domain.entity;
 
-import com.gsamshop.order.domain.exception.ErrorMessages;
-import com.gsamshop.order.domain.validator.FieldValidations;
-import org.apache.commons.validator.routines.EmailValidator;
+import com.gsamshop.order.domain.exception.CustomerArchivedException;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -37,6 +35,7 @@ public class Customer {
         this.setPromotionNotificationAllowed(promotionNotificationAllowed);
         this.setRegisteredAt(registeredAt);
         this.setArchived(false);
+        this.setLoyaltyPoints(0);
     }
 
     public Customer(UUID id, String fullName, LocalDate birthDate, String email, String phone, String document,
@@ -56,18 +55,28 @@ public class Customer {
     }
 
     public void changeName(String fullName){
+        verifyChangeable();
         this.setFullName(fullName);
     }
     public void changeEmail(String email){
+        verifyChangeable();
         this.setEmail(email);
     }
     public void changePhone(String phone){
+        verifyChangeable();
         this.setPhone(phone);
     }
 
-    public void addLoyaltyPoints(Integer points){
+    public void addLoyaltyPoints(Integer loyaltyPointsAdded){
+        verifyChangeable();
+        if(loyaltyPointsAdded <= 0){
+            throw new IllegalArgumentException();
+        }
+        this.setLoyaltyPoints(this.loyaltyPoints() + loyaltyPointsAdded);
     }
+
     public void archive(){
+        verifyChangeable();
         this.setArchived(true);
         this.setArchivedAt(OffsetDateTime.now());
         this.setFullName("Anonymous");
@@ -75,11 +84,15 @@ public class Customer {
         this.setDocument("000-00-000");
         this.setEmail(UUID.randomUUID()+"@anonymous.com");
         this.setBirthDate(null);
+        this.setPromotionNotificationAllowed(false);
     }
+
     public void enablePromotionNotifications(){
+        verifyChangeable();
         this.setPromotionNotificationAllowed(true);
     }
     public void disablePromotionNotifications(){
+        verifyChangeable();
         this.setPromotionNotificationAllowed(false);
     }
 
@@ -187,7 +200,16 @@ public class Customer {
 
     private void setLoyaltyPoints(Integer loyaltyPoints) {
         requireNonNull(loyaltyPoints);
+        if(loyaltyPoints < 0){
+          throw  new IllegalArgumentException();
+        }
         this.loyaltyPoints = loyaltyPoints;
+    }
+
+    private void verifyChangeable() {
+        if(this.isArchived()){
+            throw new CustomerArchivedException();
+        }
     }
 
     @Override
