@@ -118,4 +118,23 @@ class CustomerTest {
         assertThat(customer.loyaltyPoints()).isEqualTo(30);
 
     }
+
+    @Test
+    void given_brandNewCustomer_whenAddinvalidLoyaltyPoints_shouldGenerateException() {
+
+        Customer customer = new Customer(
+                IdGenerator.generateTimeBasedUUID(),
+                "Anonymous",
+                null,
+                "janonymous@anonymous.com",
+                "000-000-000",
+                "000-00-000",
+                false,
+                OffsetDateTime.now());
+
+        assertThatExceptionOfType(IllegalArgumentException.class)
+                .isThrownBy(() -> customer.addLoyaltyPoints(0));
+        assertThatExceptionOfType(IllegalArgumentException.class)
+                .isThrownBy(() -> customer.addLoyaltyPoints(-10));
+    }
 }
