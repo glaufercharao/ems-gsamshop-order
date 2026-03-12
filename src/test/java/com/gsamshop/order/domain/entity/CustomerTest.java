@@ -1,7 +1,7 @@
 package com.gsamshop.order.domain.entity;
 
 import com.gsamshop.order.domain.exception.CustomerArchivedException;
-import com.gsamshop.order.domain.utility.IdGenerator;
+import com.gsamshop.order.domain.valueobject.*;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -16,14 +16,23 @@ class CustomerTest {
 
         assertThatExceptionOfType(IllegalArgumentException.class)
                 .isThrownBy(()-> new Customer(
-                IdGenerator.generateTimeBasedUUID(),
-                "John Doe",
-                LocalDate.of(1991,7,5),
-                "invalid",
-                "478-256-2504",
-                "280-008-908",
+               new CustomerId(),
+                new FullName("John"," Doe"),
+                new BirthDate(LocalDate.of(1991,7,5)),
+                new Email("invalid"),
+                new Phone("478-256-2504"),
+                new Document("280-008-908"),
                 true,
-                OffsetDateTime.now()));
+                OffsetDateTime.now(),
+                        Address.builder()
+                                .street("Bourbon Street")
+                                .number("1134")
+                                .neighborhood("North Ville")
+                                .city("York")
+                                .state("South California")
+                                .zipCode(new ZipCode("12345"))
+                                .complement("Apt. 114")
+                                .build()));
 
     }
 
@@ -31,18 +40,27 @@ class CustomerTest {
     void given_invalidEmail_whenTryUpdatedCustomerEmail_shouldGenerateException(){
 
         Customer customer = new Customer(
-                IdGenerator.generateTimeBasedUUID(),
-                "John Doe",
-                LocalDate.of(1991, 7, 5),
-                "john.doe@gmail.com",
-                "478-256-2504",
-                "280-008-908",
+                new CustomerId(),
+                new FullName("John"," Doe"),
+                new BirthDate(LocalDate.of(1991, 7, 5)),
+                new Email("john.doe@gmail.com"),
+                new Phone("478-256-2504"),
+                new Document("280-008-908"),
                 true,
-                OffsetDateTime.now());
+                OffsetDateTime.now(),
+                Address.builder()
+                        .street("Bourbon Street")
+                        .number("1134")
+                        .neighborhood("North Ville")
+                        .city("York")
+                        .state("South California")
+                        .zipCode(new ZipCode("12345"))
+                        .complement("Apt. 114")
+                        .build());
 
         assertThatExceptionOfType(IllegalArgumentException.class)
                 .isThrownBy(()->{
-                    customer.changeEmail("invalid");
+                    customer.changeEmail(new Email("invalid"));
                 });
 
     }
@@ -50,52 +68,83 @@ class CustomerTest {
     void given_unarchivedCustomer_whenArchive_shouldAnonymize(){
 
         Customer customer = new Customer(
-                IdGenerator.generateTimeBasedUUID(),
-                "John Doe",
-                LocalDate.of(1991, 7, 5),
-                "john.doe@gmail.com",
-                "478-256-2504",
-                "280-008-908",
+                new CustomerId(),
+                new FullName("John"," Doe"),
+                new BirthDate(LocalDate.of(1991, 7, 5)),
+                new Email("john.doe@gmail.com"),
+                new Phone("478-256-2504"),
+                new Document("280-008-908"),
                 true,
-                OffsetDateTime.now());
+                OffsetDateTime.now(),
+                Address.builder()
+                        .street("Bourbon Street")
+                        .number("1134")
+                        .neighborhood("North Ville")
+                        .city("York")
+                        .state("South California")
+                        .zipCode(new ZipCode("12345"))
+                        .complement("Apt. 114")
+                        .build());
 
         customer.archive();
         assertWith(customer,
-            c-> assertThat(c.fullName()).isEqualTo("Anonymous"),
-            c-> assertThat(c.phone()).isEqualTo("000-000-000"),
-            c-> assertThat(c.document()).isEqualTo("000-00-000"),
-            c -> assertThat(c.email()).isNotEqualTo("john.doe@gmail.com"),
-            c->  assertThat(customer.birthDate()).isNull(),
-            c->assertThat(customer.isPromotionNotificationAllowed()).isFalse());
+                c -> assertThat(c.fullName()).isEqualTo(new FullName("Anonymous","Anonymous")),
+                c -> assertThat(c.email()).isNotEqualTo(new Email("john.doe@gmail.com")),
+                c -> assertThat(c.phone()).isEqualTo(new Phone("000-000-0000")),
+                c -> assertThat(c.document()).isEqualTo(new Document("000-00-0000")),
+                c -> assertThat(c.birthDate()).isNull(),
+                c -> assertThat(c.isPromotionNotificationsAllowed()).isFalse(),
+                c -> assertThat(c.address()).isEqualTo(
+                        Address.builder()
+                                .street("Bourbon Street")
+                                .number("Anonymized")
+                                .neighborhood("North Ville")
+                                .city("York")
+                                .state("South California")
+                                .zipCode(new ZipCode("12345"))
+                                .complement(null)
+                                .build()));
     }
 
     @Test
     void given_archivedCustomer_whenTryToUpdateArchive_shouldGenerateException(){
 
         Customer customer = new Customer(
-                IdGenerator.generateTimeBasedUUID(),
-                "Anonymous",
-                null,
-                "janonymous@anonymous.com",
-                "000-000-000",
-                "000-00-000",
+                new CustomerId(),
+                new FullName("Anonymous"," Anonymous"),
+                new BirthDate(LocalDate.of(1991, 7, 5)),
+                new Email("janonymous@anonymous.com"),
+                new Phone("000-000-000"),
+                new Document("000-00-000"),
                 false,
                 true,
                 OffsetDateTime.now(),
                 OffsetDateTime.now(),
-                10);
+                new LoyaltyPoints(10),
+                Address.builder()
+                        .street("Bourbon Street")
+                        .number("1134")
+                        .neighborhood("North Ville")
+                        .city("York")
+                        .state("South California")
+                        .zipCode(new ZipCode("12345"))
+                        .complement("Apt. 114")
+                        .build());
 
         assertThatExceptionOfType(CustomerArchivedException.class)
                 .isThrownBy(customer::archive);
 
         assertThatExceptionOfType(CustomerArchivedException.class)
-                .isThrownBy(()-> customer.changeName("Antonio"));
+                .isThrownBy(()-> customer.changeEmail(new Email("email@gmail.com")));
 
         assertThatExceptionOfType(CustomerArchivedException.class)
-                .isThrownBy(() -> customer.changeEmail("email@gmail.com"));
+                .isThrownBy(()-> customer.changePhone(new Phone("123-123-1111")));
 
         assertThatExceptionOfType(CustomerArchivedException.class)
-                .isThrownBy(()-> customer.changePhone("200-100-000"));
+                .isThrownBy(customer::enablePromotionNotifications);
+
+        assertThatExceptionOfType(CustomerArchivedException.class)
+                .isThrownBy(customer::disablePromotionNotifications);
     }
 
 
@@ -103,19 +152,28 @@ class CustomerTest {
     void given_bradNewCustomer_whenAddLoyaltypoints_shouldSumPoints(){
 
         Customer customer = new Customer(
-                IdGenerator.generateTimeBasedUUID(),
-                "John Doe",
-                LocalDate.of(1991, 7, 5),
-                "john.doe@gmail.com",
-                "478-256-2504",
-                "280-008-908",
+                new CustomerId(),
+                new FullName("John"," Doe"),
+                new BirthDate(LocalDate.of(1991, 7, 5)),
+                new Email("john.doe@gmail.com"),
+                new Phone("478-256-2504"),
+                new Document("280-008-908"),
                 true,
-                OffsetDateTime.now());
+                OffsetDateTime.now(),
+                Address.builder()
+                        .street("Bourbon Street")
+                        .number("1134")
+                        .neighborhood("North Ville")
+                        .city("York")
+                        .state("South California")
+                        .zipCode(new ZipCode("12345"))
+                        .complement("Apt. 114")
+                        .build());
 
-        customer.addLoyaltyPoints(10);
-        customer.addLoyaltyPoints(20);
+        customer.addLoyaltyPoints(new LoyaltyPoints(10));
+        customer.addLoyaltyPoints(new LoyaltyPoints(20));
 
-        assertThat(customer.loyaltyPoints()).isEqualTo(30);
+        assertThat(customer.loyaltyPoints().point()).isEqualTo(30);
 
     }
 
@@ -123,18 +181,27 @@ class CustomerTest {
     void given_brandNewCustomer_whenAddinvalidLoyaltyPoints_shouldGenerateException() {
 
         Customer customer = new Customer(
-                IdGenerator.generateTimeBasedUUID(),
-                "Anonymous",
-                null,
-                "janonymous@anonymous.com",
-                "000-000-000",
-                "000-00-000",
+                new CustomerId(),
+                new FullName("Anonymous","Anonymous"),
+                new BirthDate(LocalDate.of(1991, 7, 5)),
+                new Email("janonymous@anonymous.com"),
+                new Phone("000-000-000"),
+                new Document("000-00-000"),
                 false,
-                OffsetDateTime.now());
+                OffsetDateTime.now(),
+                Address.builder()
+                        .street("Bourbon Street")
+                        .number("1134")
+                        .neighborhood("North Ville")
+                        .city("York")
+                        .state("South California")
+                        .zipCode(new ZipCode("12345"))
+                        .complement("Apt. 114")
+                        .build());
 
         assertThatExceptionOfType(IllegalArgumentException.class)
-                .isThrownBy(() -> customer.addLoyaltyPoints(0));
+                .isThrownBy(() -> customer.addLoyaltyPoints(LoyaltyPoints.ZERO));
         assertThatExceptionOfType(IllegalArgumentException.class)
-                .isThrownBy(() -> customer.addLoyaltyPoints(-10));
+                .isThrownBy(() -> customer.addLoyaltyPoints(new LoyaltyPoints(-10)));
     }
 }
