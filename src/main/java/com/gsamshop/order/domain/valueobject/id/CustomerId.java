@@ -1,4 +1,4 @@
-package com.gsamshop.order.domain.valueobject;
+package com.gsamshop.order.domain.valueobject.id;
 
 import com.gsamshop.order.domain.utility.IdGenerator;
 
