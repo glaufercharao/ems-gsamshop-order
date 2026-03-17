@@ -1,11 +1,13 @@
 package com.gsamshop.order.domain.entity;
 
+import com.gsamshop.order.domain.utility.IdGenerator;
 import com.gsamshop.order.domain.valueobject.Money;
 import com.gsamshop.order.domain.valueobject.ProductName;
 import com.gsamshop.order.domain.valueobject.Quantity;
 import com.gsamshop.order.domain.valueobject.id.OrderId;
 import com.gsamshop.order.domain.valueobject.id.OrderItemId;
 import com.gsamshop.order.domain.valueobject.id.ProductId;
+import lombok.Builder;
 
 import java.util.Objects;
 
@@ -22,6 +24,7 @@ public class OrderItem {
 
     private Money totalAmount;
 
+    @Builder(builderClassName = "ExistingOrderItemBuilder", builderMethodName = "existing")
     public OrderItem(OrderItemId id, OrderId orderId,
                      ProductId productId, ProductName productName,
                      Money price, Quantity quantity,
@@ -33,6 +36,21 @@ public class OrderItem {
         this.setPrice(price);
         this.setQuantity(quantity);
         this.setTotalAmount(totalAmount);
+    }
+
+    @Builder(builderClassName = "BrandNewOrderItemBuilder", builderMethodName = "brandNew")
+    private static OrderItem createBrandNew(OrderId orderId,
+                                            ProductId productId, ProductName productName,
+                                            Money price, Quantity quantity) {
+        return new OrderItem(
+                new OrderItemId(),
+                orderId,
+                productId,
+                productName,
+                price,
+                quantity,
+                Money.ZERO
+        );
     }
 
     public OrderItemId id() {

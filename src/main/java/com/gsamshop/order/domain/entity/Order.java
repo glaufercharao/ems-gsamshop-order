@@ -1,19 +1,18 @@
 package com.gsamshop.order.domain.entity;
 
-import com.gsamshop.order.domain.valueobject.BillingInfo;
-import com.gsamshop.order.domain.valueobject.Money;
-import com.gsamshop.order.domain.valueobject.Quantity;
-import com.gsamshop.order.domain.valueobject.ShippingInfo;
+import com.gsamshop.order.domain.valueobject.*;
 import com.gsamshop.order.domain.valueobject.id.CustomerId;
 import com.gsamshop.order.domain.valueobject.id.OrderId;
+import com.gsamshop.order.domain.valueobject.id.ProductId;
+import lombok.Builder;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
 public class Order {
-
     private OrderId id;
     private CustomerId customerId;
 
@@ -36,6 +35,7 @@ public class Order {
 
     private Set<OrderItem> items;
 
+    @Builder(builderClassName = "ExistingOrderBuilder", builderMethodName = "existing")
     public Order(OrderId id, CustomerId customerId,
                  Money totalAmount, Quantity totalItems,
                  OffsetDateTime placedAt, OffsetDateTime paidAt,
@@ -59,6 +59,44 @@ public class Order {
         this.setShippingCost(shippingCost);
         this.setExpectedDeliveryDate(expectedDeliveryDate);
         this.setItems(items);
+    }
+
+    public static Order draft(CustomerId customerId) {
+        return new Order(
+                new OrderId(),
+                customerId,
+                Money.ZERO,
+                Quantity.ZERO,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                OrderStatus.DRAFT,
+                null,
+                null,
+                null,
+                new HashSet<>()
+        );
+    }
+
+    public void addItem(ProductId productId, ProductName productName,
+                        Money price, Quantity quantity) {
+
+        OrderItem orderItem = OrderItem.brandNew()
+                .orderId(this.id())
+                .price(price)
+                .quantity(quantity)
+                .productName(productName)
+                .productId(productId)
+                .build();
+
+        if (this.items == null) {
+            this.items = new HashSet<>();
+        }
+
+        this.items.add(orderItem);
     }
 
     public OrderId id() {
@@ -158,12 +196,10 @@ public class Order {
     }
 
     private void setBilling(BillingInfo billing) {
-        Objects.requireNonNull(billing);
         this.billing = billing;
     }
 
     private void setShipping(ShippingInfo shipping) {
-        Objects.requireNonNull(shipping);
         this.shipping = shipping;
     }
 
@@ -173,7 +209,6 @@ public class Order {
     }
 
     private void setPaymentMethod(PaymentMethod paymentMethod) {
-        Objects.requireNonNull(paymentMethod);
         this.paymentMethod = paymentMethod;
     }
 
