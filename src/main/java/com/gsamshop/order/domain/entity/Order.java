@@ -1,5 +1,7 @@
 package com.gsamshop.order.domain.entity;
 
+import com.gsamshop.order.domain.exception.OrderCannotBePlacedException;
+import com.gsamshop.order.domain.exception.OrderInvalidShippingDeliveryDateException;
 import com.gsamshop.order.domain.exception.OrderStatusCannotBeChangedException;
 import com.gsamshop.order.domain.valueobject.*;
 import com.gsamshop.order.domain.valueobject.id.CustomerId;
@@ -103,10 +105,44 @@ public class Order {
         this.items.add(orderItem);
         this.recalculateTotals();
     }
+    public void changePaymentMethod(PaymentMethod paymentMethod) {
+        Objects.requireNonNull(paymentMethod);
+        this.setPaymentMethod(paymentMethod);
+    }
+
+    public void changeBilling(BillingInfo billing) {
+        Objects.requireNonNull(billing);
+        this.setBilling(billing);
+    }
+
+    public void changeShipping(ShippingInfo shipping, Money shippingCost, LocalDate expectedDeliveryDate) {
+        Objects.requireNonNull(shipping);
+        Objects.requireNonNull(shippingCost);
+        Objects.requireNonNull(expectedDeliveryDate);
+
+        if (expectedDeliveryDate.isBefore(LocalDate.now())) {
+            throw new OrderInvalidShippingDeliveryDateException(this.id());
+        }
+
+        this.setShipping(shipping);
+        this.setShippingCost(shippingCost);
+        this.setExpectedDeliveryDate(expectedDeliveryDate);
+    }
 
     public void place(){
-        //TODO Business rules!
-        this.changeStatus(OrderStatus.PLACED);
+        Objects.requireNonNull(this.shipping());
+        Objects.requireNonNull(this.billing());
+        Objects.requireNonNull(this.expectedDeliveryDate());
+        Objects.requireNonNull(this.shippingCost());
+        Objects.requireNonNull(this.paymentMethod());
+        Objects.requireNonNull(this.items());
+
+        if (this.items().isEmpty()) {
+            throw new OrderCannotBePlacedException(this.id());
+        }
+
+        this.changeStatus(OrderStatus.PLACED); //Chamar antes!
+        this.setPlacedAt(OffsetDateTime.now());
     }
     public boolean isDraft(){
         return OrderStatus.DRAFT.equals(this.status());
