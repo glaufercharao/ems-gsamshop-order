@@ -6,11 +6,13 @@ import com.gsamshop.order.domain.exception.OrderStatusCannotBeChangedException;
 import com.gsamshop.order.domain.valueobject.*;
 import com.gsamshop.order.domain.valueobject.id.CustomerId;
 import com.gsamshop.order.domain.valueobject.id.ProductId;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertWith;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -64,6 +66,7 @@ class OrderTest {
         assertThatExceptionOfType(UnsupportedOperationException.class)
                 .isThrownBy(items::clear);
     }
+
     @Test
     public void shouldCalculateTotals() {
         Order order = Order.draft(new CustomerId());
@@ -89,15 +92,22 @@ class OrderTest {
 
     @Test
     public void givenDraftOrder_whenPlace_shouldChangeToPlaced() {
-        Order order = Order.draft(new CustomerId());
+        Order order = OrderTestDataBuilder.anOrder().build();
         order.place();
         assertThat(order.isPlaced()).isTrue();
     }
 
     @Test
+    public void givenPlacedOrder_whenMarkAsPaid_shouldChangeToPaid() {
+        Order order = OrderTestDataBuilder.anOrder().status(OrderStatus.PLACED).build();
+        order.markAsPaid();
+        assertThat(order.isPaid()).isTrue();
+        assertThat(order.paidAt()).isNotNull();
+    }
+
+    @Test
     public void givenPlacedOrder_whenTryToPlace_shouldGenerateException() {
-        Order order = Order.draft(new CustomerId());
-        order.place();
+        Order order = OrderTestDataBuilder.anOrder().status(OrderStatus.PLACED).build();
         assertThatExceptionOfType(OrderStatusCannotBeChangedException.class)
                 .isThrownBy(order::place);
     }
@@ -139,7 +149,6 @@ class OrderTest {
 
         assertThat(order.billing()).isEqualTo(expectedBillingInfo);
     }
-
 
     @Test
     public void givenDraftOrder_whenChangeShippingInfo_shouldAllowChange() {
