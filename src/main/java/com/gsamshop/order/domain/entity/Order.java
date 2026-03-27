@@ -8,7 +8,6 @@ import com.gsamshop.order.domain.valueobject.*;
 import com.gsamshop.order.domain.valueobject.id.CustomerId;
 import com.gsamshop.order.domain.valueobject.id.OrderId;
 import com.gsamshop.order.domain.valueobject.id.OrderItemId;
-import com.gsamshop.order.domain.valueobject.id.ProductId;
 import lombok.Builder;
 
 import java.math.BigDecimal;
@@ -89,15 +88,14 @@ public class Order {
         );
     }
 
-    public void addItem(ProductId productId, ProductName productName,
-                        Money price, Quantity quantity) {
+    public void addItem(Product product, Quantity quantity) {
+        Objects.requireNonNull(product);
+        Objects.requireNonNull(quantity);
 
         OrderItem orderItem = OrderItem.brandNew()
                 .orderId(this.id())
-                .price(price)
                 .quantity(quantity)
-                .productName(productName)
-                .productId(productId)
+                .product(product)
                 .build();
 
         if (this.items == null) {
@@ -143,7 +141,8 @@ public class Order {
         this.setShippingCost(shippingCost);
         this.setExpectedDeliveryDate(expectedDeliveryDate);
     }
-    void changeItemQuantity(OrderItemId orderItemId, Quantity quantity) {
+
+    public void changeItemQuantity(OrderItemId orderItemId, Quantity quantity) {
         Objects.requireNonNull(orderItemId);
         Objects.requireNonNull(quantity);
 
@@ -225,35 +224,6 @@ public class Order {
         return Collections.unmodifiableSet(this.items);
     }
 
-    private OrderItem findOrderItem(OrderItemId orderItemId) {
-        Objects.requireNonNull(orderItemId);
-        return this.items().stream()
-                .filter(i -> i.id().equals(orderItemId))
-                .findFirst()
-                .orElseThrow(()-> new OrderDoesNotContainOrderItemException(this.id(), orderItemId));
-    }
-
-    private void verifyIfCanChangeToPlaced() {
-        if (this.shipping() == null) {
-            throw OrderCannotBePlacedException.noShippingInfo(this.id());
-        }
-        if (this.billing() == null) {
-            throw OrderCannotBePlacedException.noBillingInfo(this.id());
-        }
-        if (this.paymentMethod() == null) {
-            throw OrderCannotBePlacedException.noPaymentMethod(this.id());
-        }
-        if (this.shippingCost() == null) {
-            throw OrderCannotBePlacedException.invalidShippingCost(this.id());
-        }
-        if (this.expectedDeliveryDate() == null) {
-            throw OrderCannotBePlacedException.invalidExpectedDeliveryDate(this.id());
-        }
-        if (this.items() == null || this.items().isEmpty()) {
-            throw OrderCannotBePlacedException.noItems(this.id());
-        }
-    }
-
     private void recalculateTotals() {
         BigDecimal totalItemsAmount = this.items().stream().map(i -> i.totalAmount().value())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -280,6 +250,35 @@ public class Order {
             throw new OrderStatusCannotBeChangedException(this.id(), this.status(), newStatus);
         }
         this.setStatus(newStatus);
+    }
+
+    private void verifyIfCanChangeToPlaced() {
+        if (this.shipping() == null) {
+            throw OrderCannotBePlacedException.noShippingInfo(this.id());
+        }
+        if (this.billing() == null) {
+            throw OrderCannotBePlacedException.noBillingInfo(this.id());
+        }
+        if (this.paymentMethod() == null) {
+            throw OrderCannotBePlacedException.noPaymentMethod(this.id());
+        }
+        if (this.shippingCost() == null) {
+            throw OrderCannotBePlacedException.invalidShippingCost(this.id());
+        }
+        if (this.expectedDeliveryDate() == null) {
+            throw OrderCannotBePlacedException.invalidExpectedDeliveryDate(this.id());
+        }
+        if (this.items() == null || this.items().isEmpty()) {
+            throw OrderCannotBePlacedException.noItems(this.id());
+        }
+    }
+
+    private OrderItem findOrderItem(OrderItemId orderItemId) {
+        Objects.requireNonNull(orderItemId);
+        return this.items().stream()
+                .filter(i -> i.id().equals(orderItemId))
+                .findFirst()
+                .orElseThrow(()-> new OrderDoesNotContainOrderItemException(this.id(), orderItemId));
     }
 
     private void setId(OrderId id) {
