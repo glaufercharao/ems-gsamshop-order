@@ -4,9 +4,6 @@ import com.gsamshop.order.domain.exception.CustomerArchivedException;
 import com.gsamshop.order.domain.valueobject.*;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-
 import static org.assertj.core.api.Assertions.*;
 
 class CustomerTest {
