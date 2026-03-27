@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.util.Set;
 
 class OrderTest {
+
     @Test
     public void shouldGenerate() {
         Order order = Order.draft(new CustomerId());
@@ -102,34 +103,12 @@ class OrderTest {
     }
 
     @Test
-    public void givenDraftOrder_whenChangeBillingInfo_shouldAllowChange() {
-        Address address = Address.builder()
-                .street("Bourbon Street")
-                .number("1234")
-                .neighborhood("North Ville")
-                .complement("apt. 11")
-                .city("Montfort")
-                .state("South Carolina")
-                .zipCode(new ZipCode("79911")).build();
-
-        BillingInfo billingInfo = BillingInfo.builder()
-                .address(address)
-                .document(new Document("225-09-1992"))
-                .phone(new Phone("123-111-9911"))
-                .fullName(new FullName("John", "Doe"))
-                .build();
-
+    public void givenDraftOrder_whenChangeBilling_shouldAllowChange() {
+        Billing billing = OrderTestDataBuilder.aBilling();
         Order order = Order.draft(new CustomerId());
-        order.changeBilling(billingInfo);
+        order.changeBilling(billing);
 
-        BillingInfo expectedBillingInfo = BillingInfo.builder()
-                .address(address)
-                .document(new Document("225-09-1992"))
-                .phone(new Phone("123-111-9911"))
-                .fullName(new FullName("John", "Doe"))
-                .build();
-
-        Assertions.assertThat(order.billing()).isEqualTo(expectedBillingInfo);
+        Assertions.assertThat(order.billing()).isEqualTo(billing);
     }
 
     @Test
@@ -186,4 +165,5 @@ class OrderTest {
 
         Assertions.assertThatExceptionOfType(ProductOutOfStockException.class).isThrownBy(addItemTask);
     }
+
 }
