@@ -55,6 +55,11 @@ public class OrderItem {
         orderItem.recalculateTotals();
         return orderItem;
     }
+    public void changeQuantity(Quantity quantity) {
+        Objects.requireNonNull(quantity);
+        this.setQuantity(quantity);
+        this.recalculateTotals();
+    }
     private void recalculateTotals(){
         this.setTotalAmount(this.price().multiply(this.quantity));
     }
