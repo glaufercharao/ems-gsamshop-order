@@ -1,21 +1,35 @@
 package com.gsamshop.order.domain.entity;
 
-import com.gsamshop.order.domain.valueobject.Money;
-import com.gsamshop.order.domain.valueobject.ProductName;
+import com.gsamshop.order.domain.valueobject.Product;
 import com.gsamshop.order.domain.valueobject.Quantity;
 import com.gsamshop.order.domain.valueobject.id.OrderId;
-import com.gsamshop.order.domain.valueobject.id.ProductId;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+
 
 class OrderItemTest {
 
     @Test
-    public void shouldGenerate() {
-        OrderItem.brandNew()
-                .product(ProductTestDataBuilder.aProduct().build())
-                .quantity(new Quantity(1))
-                .orderId(new OrderId())
+    public void shouldGenerateBrandNewOrderItem() {
+        Product product = ProductTestDataBuilder.aProduct().build();
+        Quantity quantity = new Quantity(1);
+        OrderId orderId = new OrderId();
+
+        OrderItem orderItem = OrderItem.brandNew()
+                .product(product)
+                .quantity(quantity)
+                .orderId(orderId)
                 .build();
+
+        Assertions.assertWith(orderItem,
+                o-> Assertions.assertThat(o.id()).isNotNull(),
+                o-> Assertions.assertThat(o.productId()).isEqualTo(product.id()),
+                o-> Assertions.assertThat(o.productName()).isEqualTo(product.name()),
+                o-> Assertions.assertThat(o.price()).isEqualTo(product.price()),
+                o-> Assertions.assertThat(o.quantity()).isEqualTo(quantity),
+                o-> Assertions.assertThat(o.orderId()).isEqualTo(orderId)
+        );
     }
 
 }
