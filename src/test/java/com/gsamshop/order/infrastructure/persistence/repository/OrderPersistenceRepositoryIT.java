@@ -5,14 +5,14 @@ import com.gsamshop.order.infrastructure.persistence.entity.OrderPersistenceEnti
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
-@SpringBootTest
-@Transactional
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class OrderPersistenceRepositoryIT {
 
     private final OrderPersistenceRepository orderPersistenceRepository;
@@ -32,7 +32,7 @@ class OrderPersistenceRepositoryIT {
                 .totalItems(2)
                 .totalAmount(new BigDecimal(1000))
                 .status("DRAFT")
-                .paymentMethod("CREDT_CARD")
+                .paymentMethod("CREDIT_CARD")
                 .placedAt(OffsetDateTime.now())
                 .build();
 

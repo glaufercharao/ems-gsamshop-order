@@ -5,6 +5,8 @@ import com.gsamshop.order.domain.model.valueobject.id.CustomerId;
 
 import java.time.LocalDate;
 
+import java.time.LocalDate;
+
 public class OrderTestDataBuilder {
 
     private CustomerId customerId = new CustomerId();
