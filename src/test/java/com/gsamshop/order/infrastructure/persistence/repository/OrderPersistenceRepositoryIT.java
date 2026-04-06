@@ -1,18 +1,22 @@
 package com.gsamshop.order.infrastructure.persistence.repository;
 
 import com.gsamshop.order.domain.model.utility.IdGenerator;
+import com.gsamshop.order.infrastructure.persistence.config.SpringDataAuditingConfig;
 import com.gsamshop.order.infrastructure.persistence.entity.OrderPersistenceEntity;
+import com.gsamshop.order.infrastructure.persistence.entity.OrderPersistenceEntityTestDataBuilder;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Import(SpringDataAuditingConfig.class)
 class OrderPersistenceRepositoryIT {
 
     private final OrderPersistenceRepository orderPersistenceRepository;
@@ -45,4 +49,16 @@ class OrderPersistenceRepositoryIT {
         long orderCount = orderPersistenceRepository.count();
         Assertions.assertThat(orderCount).isZero();
     }
+
+    @Test
+    public void shouldSetAuditingValues() {
+        OrderPersistenceEntity entity = OrderPersistenceEntityTestDataBuilder.existingOrder().build();
+        entity = orderPersistenceRepository.saveAndFlush(entity);
+
+        Assertions.assertThat(entity.getCreatedByUserId()).isNotNull();
+
+        Assertions.assertThat(entity.getLastModifiedAt()).isNotNull();
+        Assertions.assertThat(entity.getLastModifiedByUserId()).isNotNull();
+    }
+
 }
